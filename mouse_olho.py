@@ -4,7 +4,6 @@ import pyautogui
 import os
 import numpy as np
 
-# --- Configurações do PyAutoGUI ---
 pyautogui.FAILSAFE = False
 pyautogui.PAUSE = 0
 screen_width, screen_height = pyautogui.size()
@@ -46,36 +45,34 @@ while True:
 
     detection_result = detector.detect(mp_image)
 
-    # Verifica se detectou algum rosto
+
     if detection_result.face_landmarks:
-        # Pega a lista de pontos da primeira face
+
         face = detection_result.face_landmarks[0]
 
-        # --- 1. MOVIMENTO (ÍRIS) ---
+
         iris_ponto = face[468] # Centro da íris
         
-        # Mapeia o movimento sutil do olho para a tela inteira
+
         alvo_x = np.interp(iris_ponto.x, (0.43, 0.57), (0, screen_width))
         alvo_y = np.interp(iris_ponto.y, (0.43, 0.57), (0, screen_height))
         
-        # Aplica suavização
+   
         suave_x = (suave_x * (1 - fator_suavizacao)) + (alvo_x * fator_suavizacao)
         suave_y = (suave_y * (1 - fator_suavizacao)) + (alvo_y * fator_suavizacao)
         
         pyautogui.moveTo(suave_x, suave_y)
 
-        # --- 2. FEEDBACK VISUAL ---
+
         ix = int(iris_ponto.x * w)
         iy = int(iris_ponto.y * h)
         cv2.circle(frame, (ix, iy), 5, (0, 255, 0), -1)
 
-        # --- 3. CLIQUE (PISCADA) ---
+
         palpebra_sup = face[159]
         palpebra_inf = face[145]
         distancia_vertical = (palpebra_inf.y - palpebra_sup.y) * h
 
-# Se a abertura for menor que 5.0, o clique acontece.
-# Como seu 'aberto' mais baixo foi 5.26, o 5.0 deve dar segurança.
         if distancia_vertical < 5.0: 
             cv2.putText(frame, "CLIQUE!", (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
             pyautogui.click()
